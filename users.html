@@ -11,13 +11,16 @@
 <body>
    
     <div id="contenedor">
-       <span> Bienvenido: {{ nameV }}</span>
+       <h1> Bienvenido: {{ nameV }}</h1>
        
        <div v-show="formulario">
 
         <form action="" id="form">
             <fieldset>
                 <legend>Registro de Usuario</legend>
+                <legend v-show="!editarForm">Registrar</legend>
+                <legend v-show="editarForm">Editar</legend>
+
                 <label for="">
                     <input type="text" v-model="nombreF" placeholder="Nombre Completo" required>
                 </label>
@@ -29,8 +32,11 @@
                 <label for="">
                     <input type="email" v-model="emailF"  placeholder="Correo"  required>
                 </label>
+
+                <hr v-show="!editarForm">
+
                 <hr>
-                <label for="">
+                <label for=""  v-show="!editarForm">
                     <input type="password" v-model="passwordF" placeholder="Contraseña" required>
                 </label>
                 <hr>
@@ -72,8 +78,8 @@
                         <td>{{u.phone}}</td>
                         <td>{{u.website}}</td>
                         <td>
-                            <button>Modificar</button>
-                            <button>Eliminar</button>
+                            <button @click="modificar(u)">Modificar</button>
+                            <button @click="eliminar(u.id)">Eliminar</button>
                         </td>
                     </tr>
                 </tbody>
@@ -90,6 +96,8 @@
         createApp({
             data() {
                 return {
+                    users:null,
+                    editarForm: false,
                     formulario: false,
                     nombreF: '', 
                     usuarioF: '',
@@ -101,27 +109,57 @@
             },
             methods: {
                 register() {
+                    if (this.editarForm) {
+                        this.users.splice(this.numberId - 1, 1, ({
+                            id: this.numberId,
+                            name: this.nombreF,
+                            username: this.usuarioF,
+                            email: this.emailF,
+                            password: this.passwordF,
+                            phone: this.phoneForm,
+                            website: this.websiteForm,
+                        }))
+                    } else {
+                        id += 1;
+                        this.users.push({
+                            id: id,
+                            name: this.nombreF,
+                            username: this.usuarioF,
+                            email: this.emailF,
+                            phone: this.phoneForm,
+                            website: this.websiteForm,
+                        });
+                    }
+                    this.numberId = ''
+                    this.nombreF = ''
+                    this.usuarioF = ''
+                    this.emailF = ''
+                    this.passwordF = ''
+                    this.phoneForm = ''
+                    this.websiteForm = ''
                     this.formulario = false;
-
-                    this.users.push({
-                        name: this.nombreF,
-                        username: this.usuarioF,
-                        email: this.emailF,
-                        password: this.passwordF,
-                        phone: this.phoneForm,
-                        website: this.websiteForm,
-                    });
-
-                    this.nombreF = '',
-                        this.usuarioF = '',
-                        this.emailF = '',
-                        this.passwordF = '',
-                        this.phoneForm = '',
-                        this.websiteForm = ''
+                    this.editarForm = false;
+                    
                 },
                 cerrarSesion() {
                     localStorage.removeItem('user');
                     window.location.href = "index.html";
+                },
+                modificar(u) { 
+                    this.editarForm= true;
+                    this.formulario = true;
+                    this.numberId = u.id
+                    this.nombreF = u.name
+                    this.usuarioF = u.username
+                    this.emailF = u.email
+                    this.passwordF = u.password
+                    this.phoneForm = u.phone
+                    this.websiteForm = u.website
+                },
+                eliminar(id2) {
+                    id2 -= 1;
+                    this.users.splice(id2, 1);
+                      console.log(id2);
                 }
             },
             mounted() {
@@ -131,7 +169,7 @@
                 this.nameV = user.name
                 fetch('users.json')
                     .then((res) => res.json()) 
-                    .then((json) => (this.users = json))
+                    .then((json) => (this.users = json , id = json.length))
                     .catch((err) => (alert('no data')))
             }
         }).mount('#contenedor')
